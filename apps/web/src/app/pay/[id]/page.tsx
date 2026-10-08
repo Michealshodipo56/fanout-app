@@ -27,31 +27,16 @@ export default function PublicPaymentPage() {
 
     try {
       const walletState = await stellarClient.requestWalletConnect();
-      const payerAddress = walletState.address || "GBX734567345673456734567345673456734567345673456734567";
-
-      // Simulate on-chain transaction hash
-      const mockTxHash = `e${Math.random().toString(36).substring(2, 15)}${Date.now().toString(36)}`;
-      
-      db.addPayment({
-        id: `pay_${Date.now()}`,
-        paymentRef: `PAY_${Date.now().toString(36).toUpperCase()}`,
-        agreementId: agreement.id,
-        payerAddress,
-        amount: (parseFloat(amount) * 10000000).toString(),
-        assetAddress: agreement.acceptedAsset,
-        txHash: mockTxHash,
-        ledgerSequence: 54938210,
-        status: 'Succeeded',
-        configVersion: agreement.version,
-        distributions: agreement.beneficiaries.map(b => ({
-          beneficiaryAddress: b.address,
-          amount: ((parseFloat(amount) * 10000000 * b.allocationBps) / 10000).toString(),
-          allocationBps: b.allocationBps
-        })),
-        createdAt: new Date()
-      });
-
-      setSuccessTxHash(mockTxHash);
+      if (!walletState.address) throw new Error('Freighter did not return an account address.');
+      const baseUnits = stellarClient.formatBaseUnits(amount);
+      const paymentRef = `PAY_${Date.now().toString(36).toUpperCase()}`;
+      const txHash = await stellarClient.distribute(
+        agreement.contractAddress,
+        walletState.address,
+        baseUnits,
+        paymentRef
+      );
+      setSuccessTxHash(txHash);
     } catch (err: any) {
       alert(err.message || 'Payment execution failed');
     } finally {
