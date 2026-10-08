@@ -2,19 +2,20 @@
 
 import React, { useState } from 'react';
 import { useParams } from 'next/navigation';
-import { db } from '@fanout/database';
+import { useAgreement } from '@/lib/useAgreement';
 import { Badge, AllocationBar } from '@fanout/ui';
-import { Copy, Check, ExternalLink, ShieldCheck, Share2, Wallet } from 'lucide-react';
+import { Copy, Check, ExternalLink, Share2 } from 'lucide-react';
 import { stellarClient } from '@fanout/stellar';
 
 export default function AgreementDetailPage() {
   const params = useParams();
   const id = typeof params.id === 'string' ? params.id : '';
-  const agreement = db.getAgreementById(id) || db.getAgreements()[0];
+  const { agreement, loading } = useAgreement(id);
 
   const [copiedContract, setCopiedContract] = useState(false);
   const [copiedPayLink, setCopiedPayLink] = useState(false);
 
+  if (loading) return <div className="text-center py-12 text-slate-400">Loading agreement…</div>;
   if (!agreement) {
     return <div className="text-center py-12 text-slate-400">Agreement not found</div>;
   }

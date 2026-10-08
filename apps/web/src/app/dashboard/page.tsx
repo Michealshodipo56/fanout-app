@@ -1,16 +1,27 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { db } from '@fanout/database';
+import type { AgreementRecord, PaymentRecord } from '@fanout/database';
 import { Badge } from '@fanout/ui';
-import { ExternalLink, PlusCircle, Copy, Check } from 'lucide-react';
-import { stellarClient } from '@fanout/stellar';
+import { PlusCircle, Copy, Check } from 'lucide-react';
 
 export default function DashboardPage() {
   const [copiedId, setCopiedId] = useState<string | null>(null);
-  const agreements = db.getAgreements();
-  const recentPayments = db.getRecentPayments();
+  const [agreements, setAgreements] = useState<AgreementRecord[]>([]);
+  const [payments, setPayments] = useState<PaymentRecord[]>([]);
+
+  useEffect(() => {
+    Promise.all([
+      fetch('/api/v1/agreements').then((response) => response.json()),
+      fetch('/api/v1/payments/history').then((response) => response.json()),
+    ]).then(([agreementPayload, paymentPayload]) => {
+      setAgreements(agreementPayload.data || []);
+      setPayments(paymentPayload.data || []);
+    }).catch(() => undefined);
+  }, []);
+
+  const totalDistributed = agreements.reduce((sum, agreement) => sum + Number(agreement.totalDistributed), 0) / 1_000_000;
 
   const handleCopyLink = (id: string) => {
     const url = `${window.location.origin}/pay/${id}`;
@@ -39,7 +50,7 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="glass-card p-5 rounded-xl border border-slate-800 space-y-1">
           <div className="text-xs text-slate-400">Total Distributed</div>
-          <div className="text-2xl font-black text-white">15,000.00 <span className="text-xs text-blue-400 font-normal">USDC</span></div>
+          <div className="text-2xl font-black text-white">{totalDistributed.toFixed(2)} <span className="text-xs text-blue-400 font-normal">USDC</span></div>
         </div>
 
         <div className="glass-card p-5 rounded-xl border border-slate-800 space-y-1">
@@ -49,7 +60,7 @@ export default function DashboardPage() {
 
         <div className="glass-card p-5 rounded-xl border border-slate-800 space-y-1">
           <div className="text-xs text-slate-400">Total Transactions</div>
-          <div className="text-2xl font-black text-white">42</div>
+          <div className="text-2xl font-black text-white">{payments.length}</div>
         </div>
 
         <div className="glass-card p-5 rounded-xl border border-slate-800 space-y-1">
@@ -80,6 +91,7 @@ export default function DashboardPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-800/60">
+              {agreements.length === 0 && <tr><td colSpan={5} className="px-4 py-10 text-center text-slate-400">No agreements have been registered yet.</td></tr>}
               {agreements.map((a) => (
                 <tr key={a.id} className="hover:bg-slate-900/40 transition-colors">
                   <td className="px-4 py-3.5 font-semibold text-white">

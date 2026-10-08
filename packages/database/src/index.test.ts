@@ -3,8 +3,8 @@ import { describe, it } from 'node:test';
 import { db } from './index';
 
 describe('development database adapter', () => {
-  it('retrieves the seeded agreement and filters unknown IDs', () => {
-    assert.equal(db.getAgreementById('agr_demo_1')?.status, 'Active');
+  it('starts empty and filters unknown IDs', () => {
+    assert.equal(db.getAgreements().length, 0);
     assert.equal(db.getAgreementById('missing'), undefined);
   });
 

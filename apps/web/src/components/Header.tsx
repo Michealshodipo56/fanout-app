@@ -1,18 +1,27 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { stellarClient } from '@fanout/stellar';
 
 export const Header: React.FC = () => {
   const [wallet, setWallet] = useState<{ isConnected: boolean; address?: string }>({ isConnected: false });
+  const [isConnecting, setIsConnecting] = useState(false);
+
+  useEffect(() => {
+    stellarClient.checkWalletConnection().then(setWallet);
+  }, []);
 
   const handleConnect = async () => {
     try {
+      setIsConnecting(true);
       const state = await stellarClient.requestWalletConnect();
       setWallet(state);
     } catch (err: any) {
       alert(err.message);
+    } finally {
+      setIsConnecting(false);
     }
   };
 
@@ -20,9 +29,7 @@ export const Header: React.FC = () => {
     <header className="sticky top-0 z-50 glass-card border-b border-slate-800">
       <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-2 font-bold text-xl tracking-tight text-white">
-          <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-white text-lg font-black shadow-lg shadow-blue-500/30">
-            F
-          </div>
+          <Image src="/fanout-logo.png" alt="Fanout" width={36} height={36} priority className="h-9 w-9 object-contain" />
           <span>Fanout</span>
           <span className="text-xs px-2 py-0.5 rounded bg-blue-500/10 text-blue-400 font-normal border border-blue-500/20">Testnet</span>
         </Link>
@@ -44,9 +51,10 @@ export const Header: React.FC = () => {
           ) : (
             <button
               onClick={handleConnect}
+              disabled={isConnecting}
               className="px-4 py-2 text-xs font-semibold rounded-lg bg-blue-600 hover:bg-blue-700 text-white shadow-md shadow-blue-600/20 transition-all cursor-pointer"
             >
-              Connect Wallet
+              {isConnecting ? 'Connecting…' : 'Connect Wallet'}
             </button>
           )}
         </div>

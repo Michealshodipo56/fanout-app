@@ -2,19 +2,18 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { db } from '@fanout/database';
-import { AllocationBar } from '@fanout/ui';
-import { Plus, Trash2, ShieldCheck, CheckCircle2 } from 'lucide-react';
+import { Plus, Trash2, CheckCircle2 } from 'lucide-react';
 import { stellarClient } from '@fanout/stellar';
 
 export default function CreateAgreementPage() {
   const router = useRouter();
   const [name, setName] = useState('');
-  const [asset, setAsset] = useState('CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMWAXA72PP2FFF');
+  const [asset, setAsset] = useState('');
+  const [contractAddress, setContractAddress] = useState('');
   const [requiredApprovals, setRequiredApprovals] = useState(2);
   const [beneficiaries, setBeneficiaries] = useState<Array<{ address: string; percentage: number }>>([
-    { address: 'GAA1111111111111111111111111111111111111111111111111111', percentage: 60 },
-    { address: 'GAA2222222222222222222222222222222222222222222222222222', percentage: 40 }
+    { address: '', percentage: 50 },
+    { address: '', percentage: 50 }
   ]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -59,25 +58,25 @@ export default function CreateAgreementPage() {
 
     try {
       const walletState = await stellarClient.requestWalletConnect();
-      const creatorAddress = walletState.address || "GBX734567345673456734567345673456734567345673456734567";
-
-      const created = db.createAgreement({
-        id: `agr_${Date.now()}`,
-        contractAddress: `C${Math.random().toString(36).substring(2, 15).toUpperCase()}${Date.now().toString(36).toUpperCase()}`,
+      if (!walletState.address) throw new Error('Freighter did not return an account address.');
+      const response = await fetch('/api/v1/agreements', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+        contractAddress,
         name,
-        creatorAddress,
+        creatorAddress: walletState.address,
         acceptedAsset: asset,
-        status: 'Active',
-        version: 1,
         requiredApprovals: Number(requiredApprovals) || 1,
-        totalDistributed: '0',
-        transactionCount: 0,
         beneficiaries: beneficiaries.map(b => ({
           address: b.address,
           allocationBps: Math.round(b.percentage * 100)
         })),
-        createdAt: new Date()
+        }),
       });
+      const payload = await response.json();
+      if (!response.ok) throw new Error(payload.error || 'Could not register agreement');
+      const created = payload.data;
 
       router.push(`/agreements/${created.id}`);
     } catch (err: any) {
@@ -91,7 +90,7 @@ export default function CreateAgreementPage() {
     <div className="max-w-3xl mx-auto space-y-8 py-4">
       <div>
         <h1 className="text-3xl font-extrabold text-white tracking-tight">Create Revenue Sharing Agreement</h1>
-        <p className="text-xs text-slate-400">Deploy a Soroban smart contract to automatically split incoming payments</p>
+        <p className="text-xs text-slate-400">Register a deployed Soroban agreement so Fanout can track and operate it</p>
       </div>
 
       {errorMsg && (
@@ -106,6 +105,11 @@ export default function CreateAgreementPage() {
           <h3 className="font-bold text-white text-base border-b border-slate-800 pb-2">1. Agreement Configuration</h3>
           
           <div>
+            <label className="block text-xs font-semibold text-slate-300 mb-1">Deployed Soroban Contract ID</label>
+            <input type="text" value={contractAddress} onChange={(e) => setContractAddress(e.target.value)} placeholder="C..." className="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-sm text-white focus:outline-none focus:border-blue-500" required />
+          </div>
+
+          <div>
             <label className="block text-xs font-semibold text-slate-300 mb-1">Agreement Name</label>
             <input
               type="text"
@@ -119,14 +123,14 @@ export default function CreateAgreementPage() {
 
           <div>
             <label className="block text-xs font-semibold text-slate-300 mb-1">Accepted Asset (Stellar Contract Address)</label>
-            <select
+            <input
+              type="text"
               value={asset}
               onChange={(e) => setAsset(e.target.value)}
+              placeholder="Stellar asset contract ID (C...)"
               className="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-sm text-white focus:outline-none focus:border-blue-500"
-            >
-              <option value="CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMWAXA72PP2FFF">USDC (Testnet) - CDLZFC3SYJYDZT7K...</option>
-              <option value="CAS3J7GYLGXMF6TDJBBYYSE3VAYFRFLRHZ3JI2V4B4D44RFG7Z5E4DAO">native XLM Token</option>
-            </select>
+              required
+            />
           </div>
         </div>
 
@@ -205,10 +209,10 @@ export default function CreateAgreementPage() {
           className="w-full py-3.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm shadow-xl disabled:opacity-50 transition-all flex items-center justify-center gap-2 cursor-pointer"
         >
           {isSubmitting ? (
-            <span>Deploying to Stellar Soroban...</span>
+            <span>Registering agreement...</span>
           ) : (
             <>
-              <CheckCircle2 className="w-4 h-4" /> Deploy Smart Contract
+              <CheckCircle2 className="w-4 h-4" /> Register Agreement
             </>
           )}
         </button>

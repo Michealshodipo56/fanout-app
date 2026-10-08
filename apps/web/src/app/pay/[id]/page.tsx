@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { useParams } from 'next/navigation';
-import { db } from '@fanout/database';
+import { useAgreement } from '@/lib/useAgreement';
 import { AllocationBar } from '@fanout/ui';
 import { Wallet, CheckCircle, ExternalLink, ArrowRight } from 'lucide-react';
 import { stellarClient } from '@fanout/stellar';
@@ -10,12 +10,13 @@ import { stellarClient } from '@fanout/stellar';
 export default function PublicPaymentPage() {
   const params = useParams();
   const id = typeof params.id === 'string' ? params.id : '';
-  const agreement = db.getAgreementById(id) || db.getAgreements()[0];
+  const { agreement, loading } = useAgreement(id);
 
   const [amount, setAmount] = useState('100');
   const [isProcessing, setIsProcessing] = useState(false);
   const [successTxHash, setSuccessTxHash] = useState<string | null>(null);
 
+  if (loading) return <div className="text-center py-12 text-slate-400">Loading agreement…</div>;
   if (!agreement) {
     return <div className="text-center py-12 text-slate-400">Payment agreement not found</div>;
   }

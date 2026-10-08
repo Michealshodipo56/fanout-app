@@ -1,5 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 
 export const Footer: React.FC = () => {
   return (
@@ -7,7 +8,7 @@ export const Footer: React.FC = () => {
       <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-4 gap-8 text-sm text-slate-400">
         <div className="space-y-3">
           <div className="flex items-center gap-2 font-bold text-lg text-white">
-            <div className="w-6 h-6 rounded bg-blue-600 flex items-center justify-center text-white text-xs font-black">F</div>
+            <Image src="/fanout-logo.png" alt="Fanout" width={28} height={28} className="h-7 w-7 object-contain" />
             Fanout
           </div>
           <p className="text-xs text-slate-400 leading-relaxed">
@@ -32,7 +33,7 @@ export const Footer: React.FC = () => {
             <li><a href="https://stellar.org" target="_blank" rel="noreferrer" className="hover:text-white">Stellar Network</a></li>
             <li><a href="https://soroban.stellar.org" target="_blank" rel="noreferrer" className="hover:text-white">Soroban Docs</a></li>
             <li><Link href="/docs" className="hover:text-white">SDK & API Reference</Link></li>
-            <li><a href="https://github.com" target="_blank" rel="noreferrer" className="hover:text-white">GitHub Monorepo</a></li>
+            <li><a href="https://github.com/fanout-web/fanout-app" target="_blank" rel="noreferrer" className="hover:text-white">GitHub Monorepo</a></li>
           </ul>
         </div>
 

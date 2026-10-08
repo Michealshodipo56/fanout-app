@@ -180,7 +180,7 @@ export default function LandingPage() {
           <div><span className="text-purple-400">import</span> &#123; FanoutClient &#125; <span className="text-purple-400">from</span> <span className="text-emerald-300">'@fanout/sdk'</span>;</div>
           <div><span className="text-blue-400">const</span> client = <span className="text-purple-400">new</span> FanoutClient(&#123; apiKey: <span className="text-emerald-300">'fo_live_...'</span> &#125;);</div>
           <div><span className="text-blue-400">const</span> req = <span className="text-purple-400">await</span> client.createPaymentRequest(&#123;</div>
-          <div className="pl-4">agreementId: <span className="text-emerald-300">'agr_demo_1'</span>,</div>
+          <div className="pl-4">agreementId: <span className="text-emerald-300">'agr_your_id'</span>,</div>
           <div className="pl-4">amount: <span className="text-emerald-300">'100.00'</span>,</div>
           <div className="pl-4">payerAddress: <span className="text-emerald-300">'GBX73...'</span></div>
           <div>&#125;);</div>
