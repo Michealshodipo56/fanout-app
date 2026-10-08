@@ -58,29 +58,6 @@ class InMemoryDatabase {
   private payments: PaymentRecord[] = [];
   private proposals: Map<string, ProposalRecord> = new Map();
 
-  constructor() {
-    // Seed default sample agreement for test environment
-    const sampleId = "agr_demo_1";
-    this.agreements.set(sampleId, {
-      id: sampleId,
-      contractAddress: "CCW6235467345673456734567345673456734567345673456734567",
-      name: "TrusTrove Core Contributors Share",
-      creatorAddress: "GBX734567345673456734567345673456734567345673456734567",
-      acceptedAsset: "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMWAXA72PP2FFF",
-      status: "Active",
-      version: 1,
-      requiredApprovals: 2,
-      totalDistributed: "15000000000",
-      transactionCount: 42,
-      beneficiaries: [
-        { address: "GAA1111111111111111111111111111111111111111111111111111", allocationBps: 5000 },
-        { address: "GAA2222222222222222222222222222222222222222222222222222", allocationBps: 3000 },
-        { address: "GAA3333333333333333333333333333333333333333333333333333", allocationBps: 2000 }
-      ],
-      createdAt: new Date()
-    });
-  }
-
   public getAgreements(): AgreementRecord[] {
     return Array.from(this.agreements.values());
   }

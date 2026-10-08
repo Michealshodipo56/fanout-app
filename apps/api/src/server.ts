@@ -28,15 +28,15 @@ app.get('/api/v1/agreements/:id', (req: Request, res: Response) => {
 });
 
 app.post('/api/v1/agreements', (req: Request, res: Response) => {
-  const { name, creatorAddress, acceptedAsset, beneficiaries, requiredApprovals } = req.body;
+  const { contractAddress, name, creatorAddress, acceptedAsset, beneficiaries, requiredApprovals } = req.body;
   
-  if (!name || !creatorAddress || !acceptedAsset || !Array.isArray(beneficiaries) || beneficiaries.length === 0) {
+  if (!contractAddress || !name || !creatorAddress || !acceptedAsset || !Array.isArray(beneficiaries) || beneficiaries.length === 0) {
     return res.status(400).json({ success: false, error: 'Invalid parameters' });
   }
 
   const newAgr = db.createAgreement({
     id: `agr_${Date.now()}`,
-    contractAddress: `C${Math.random().toString(36).substring(2, 15).toUpperCase()}`,
+    contractAddress,
     name,
     creatorAddress,
     acceptedAsset,

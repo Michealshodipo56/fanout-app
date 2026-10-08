@@ -20,7 +20,7 @@ export default function DocsPage() {
           <div className="text-purple-400">import &#123; FanoutClient &#125; from '@fanout/sdk';</div>
           <div className="text-blue-400">const client = new FanoutClient(&#123; baseUrl: 'https://api.fanout.network' &#125;);</div>
           <div className="text-slate-500">// Fetch agreement info</div>
-          <div>const agreement = await client.getAgreement('agr_demo_1');</div>
+          <div>const agreement = await client.getAgreement('agr_your_id');</div>
         </div>
       </div>
 

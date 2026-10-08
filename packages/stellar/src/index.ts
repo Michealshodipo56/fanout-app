@@ -1,3 +1,18 @@
+import {
+  getAddress,
+  getNetwork,
+  isConnected,
+  setAllowed,
+  signTransaction
+} from '@stellar/freighter-api';
+import {
+  Contract,
+  TransactionBuilder,
+  nativeToScVal,
+  rpc,
+  xdr
+} from '@stellar/stellar-sdk';
+
 export interface NetworkConfig {
   network: 'testnet' | 'mainnet';
   rpcUrl: string;
@@ -34,32 +49,39 @@ export class StellarClient {
   }
 
   public async checkWalletConnection(): Promise<WalletConnectionState> {
-    if (typeof window !== 'undefined' && (window as any).freighter) {
-      try {
-        const isConnected = await (window as any).freighter.isConnected();
-        if (isConnected) {
-          const address = await (window as any).freighter.getAddress();
-          const network = await (window as any).freighter.getNetwork();
-          return { isConnected: true, address, network };
-        }
-      } catch (err) {
-        console.warn('Freighter wallet connection query failed:', err);
-      }
+    if (typeof window === 'undefined') return { isConnected: false };
+
+    try {
+      const connection = await isConnected();
+      if (connection.error || !connection.isConnected) return { isConnected: false };
+
+      const [account, networkDetails] = await Promise.all([getAddress(), getNetwork()]);
+      if (account.error || networkDetails.error || !account.address) return { isConnected: false };
+      return { isConnected: true, address: account.address, network: networkDetails.network };
+    } catch (err) {
+      console.warn('Freighter wallet connection query failed:', err);
+      return { isConnected: false };
     }
-    return { isConnected: false };
   }
 
   public async requestWalletConnect(): Promise<WalletConnectionState> {
-    if (typeof window !== 'undefined' && (window as any).freighter) {
-      try {
-        const address = await (window as any).freighter.requestAccess();
-        const network = await (window as any).freighter.getNetwork();
-        return { isConnected: true, address, network };
-      } catch (err) {
-        throw new Error(`Wallet connection rejected by user: ${err}`);
-      }
+    if (typeof window === 'undefined') throw new Error('Wallet connection is only available in a browser.');
+
+    const connection = await isConnected();
+    if (connection.error || !connection.isConnected) {
+      throw new Error('Freighter is not available. Install or enable the Freighter browser extension, then reload this page.');
     }
-    throw new Error('Freighter Wallet extension is not installed. Please install Freighter to connect.');
+
+    const permission = await setAllowed();
+    if (permission.error || !permission.isAllowed) {
+      throw new Error('Freighter access was not approved. Open the extension and allow this site.');
+    }
+
+    const [account, networkDetails] = await Promise.all([getAddress(), getNetwork()]);
+    if (account.error || !account.address) throw new Error('Freighter did not return an account address.');
+    if (networkDetails.error) throw new Error('Freighter did not return its active network.');
+
+    return { isConnected: true, address: account.address, network: networkDetails.network };
   }
 
   public calculateBasisPoints(percentages: number[]): number[] {
@@ -86,9 +108,7 @@ export class StellarClient {
     amount: string,
     paymentRef: string
   ): Promise<string> {
-    if (typeof window === 'undefined' || !(window as any).freighter) {
-      throw new Error('Freighter Wallet extension is not installed.');
-    }
+    if (typeof window === 'undefined') throw new Error('Transactions can only be signed in a browser.');
     if (!/^[A-Za-z0-9_]{1,32}$/.test(paymentRef)) {
       throw new Error('Payment reference must contain 1-32 letters, numbers, or underscores.');
     }
@@ -111,15 +131,14 @@ export class StellarClient {
       .setTimeout(180)
       .build();
     const prepared = await server.prepareTransaction(transaction);
-    const signed = await (window as any).freighter.signTransaction(prepared.toXDR(), {
+    const signed = await signTransaction(prepared.toXDR(), {
       networkPassphrase: this.config.networkPassphrase,
       address: payer
     });
-    const signedXdr = typeof signed === 'string' ? signed : signed.signedTxXdr;
-    if (!signedXdr) throw new Error('Freighter did not return a signed transaction.');
+    if (signed.error || !signed.signedTxXdr) throw new Error('Freighter did not return a signed transaction.');
 
     const submitted = await server.sendTransaction(
-      TransactionBuilder.fromXDR(signedXdr, this.config.networkPassphrase)
+      TransactionBuilder.fromXDR(signed.signedTxXdr, this.config.networkPassphrase)
     );
     if (submitted.status === 'ERROR') throw new Error('Stellar RPC rejected the transaction.');
 
@@ -134,10 +153,3 @@ export class StellarClient {
 }
 
 export const stellarClient = new StellarClient();
-import {
-  Contract,
-  TransactionBuilder,
-  nativeToScVal,
-  rpc,
-  xdr
-} from '@stellar/stellar-sdk';

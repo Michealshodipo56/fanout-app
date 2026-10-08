@@ -6,6 +6,11 @@ import { Footer } from '@/components/Footer';
 export const metadata: Metadata = {
   title: 'Fanout — Programmable Revenue Sharing on Stellar',
   description: 'One payment. Everyone gets their share. Automate multi-beneficiary revenue distributions using Soroban smart contracts.',
+  icons: {
+    icon: '/fanout-logo.png',
+    shortcut: '/fanout-logo.png',
+    apple: '/fanout-logo.png',
+  },
 };
 
 export default function RootLayout({
