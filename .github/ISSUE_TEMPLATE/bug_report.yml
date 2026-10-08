@@ -1,0 +1,27 @@
+name: Bug report
+description: Report a reproducible problem in the Fanout application stack.
+title: "bug: "
+labels: [bug, triage]
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened?
+      description: Include the expected and actual behavior.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction steps
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version or commit
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Browser, Node.js version, Stellar network, and relevant configuration.
