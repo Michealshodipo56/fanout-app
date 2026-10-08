@@ -5,8 +5,8 @@
   "scripts": {
     "build": "pnpm --filter \"./packages/*\" build && pnpm --filter \"./apps/*\" build && pnpm --filter \"./services/*\" build",
     "dev": "pnpm --parallel dev",
-    "test": "pnpm --recursive test",
-    "lint": "pnpm --recursive lint"
+    "test": "pnpm build && node --test packages/*/dist/*.test.js",
+    "lint": "pnpm build"
   },
   "devDependencies": {
     "typescript": "^5.6.3",

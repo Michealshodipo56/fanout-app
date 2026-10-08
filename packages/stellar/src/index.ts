@@ -72,10 +72,72 @@ export class StellarClient {
   }
 
   public formatBaseUnits(amountStr: string, decimals: number = 7): string {
-    const val = parseFloat(amountStr);
-    if (isNaN(val) || val <= 0) throw new Error("Invalid payment amount");
-    return BigInt(Math.round(val * Math.pow(10, decimals))).toString();
+    if (!/^\d+(\.\d+)?$/.test(amountStr)) throw new Error('Invalid payment amount');
+    const [whole, fraction = ''] = amountStr.split('.');
+    if (fraction.length > decimals) throw new Error(`Payment amount supports at most ${decimals} decimals`);
+    const value = BigInt(whole) * 10n ** BigInt(decimals) + BigInt(fraction.padEnd(decimals, '0'));
+    if (value <= 0n) throw new Error('Invalid payment amount');
+    return value.toString();
+  }
+
+  public async distribute(
+    contractId: string,
+    payer: string,
+    amount: string,
+    paymentRef: string
+  ): Promise<string> {
+    if (typeof window === 'undefined' || !(window as any).freighter) {
+      throw new Error('Freighter Wallet extension is not installed.');
+    }
+    if (!/^[A-Za-z0-9_]{1,32}$/.test(paymentRef)) {
+      throw new Error('Payment reference must contain 1-32 letters, numbers, or underscores.');
+    }
+
+    const server = new rpc.Server(this.config.rpcUrl);
+    const source = await server.getAccount(payer);
+    const contract = new Contract(contractId);
+    const transaction = new TransactionBuilder(source, {
+      fee: '1000000',
+      networkPassphrase: this.config.networkPassphrase
+    })
+      .addOperation(
+        contract.call(
+          'distribute',
+          nativeToScVal(payer, { type: 'address' }),
+          nativeToScVal(BigInt(amount), { type: 'i128' }),
+          xdr.ScVal.scvSymbol(paymentRef)
+        )
+      )
+      .setTimeout(180)
+      .build();
+    const prepared = await server.prepareTransaction(transaction);
+    const signed = await (window as any).freighter.signTransaction(prepared.toXDR(), {
+      networkPassphrase: this.config.networkPassphrase,
+      address: payer
+    });
+    const signedXdr = typeof signed === 'string' ? signed : signed.signedTxXdr;
+    if (!signedXdr) throw new Error('Freighter did not return a signed transaction.');
+
+    const submitted = await server.sendTransaction(
+      TransactionBuilder.fromXDR(signedXdr, this.config.networkPassphrase)
+    );
+    if (submitted.status === 'ERROR') throw new Error('Stellar RPC rejected the transaction.');
+
+    for (let attempt = 0; attempt < 30; attempt += 1) {
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      const result = await server.getTransaction(submitted.hash);
+      if (result.status === 'SUCCESS') return submitted.hash;
+      if (result.status === 'FAILED') throw new Error('The Soroban transaction failed.');
+    }
+    throw new Error('Transaction confirmation timed out. Check the transaction in Stellar Explorer.');
   }
 }
 
 export const stellarClient = new StellarClient();
+import {
+  Contract,
+  TransactionBuilder,
+  nativeToScVal,
+  rpc,
+  xdr
+} from '@stellar/stellar-sdk';

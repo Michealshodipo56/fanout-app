@@ -51,7 +51,7 @@ export class FanoutClient {
     if (!res.ok) {
       throw new Error(`Failed to fetch agreement: ${res.statusText}`);
     }
-    return res.json();
+    return this.unwrap<AgreementResponse>(await res.json());
   }
 
   public async createPaymentRequest(
@@ -65,7 +65,7 @@ export class FanoutClient {
     if (!res.ok) {
       throw new Error(`Failed to create payment request: ${res.statusText}`);
     }
-    return res.json();
+    return this.unwrap<PaymentRequestResponse>(await res.json());
   }
 
   private getHeaders(): Record<string, string> {
@@ -76,5 +76,12 @@ export class FanoutClient {
       headers['X-API-Key'] = this.apiKey;
     }
     return headers;
+  }
+
+  private unwrap<T>(body: unknown): T {
+    if (body && typeof body === 'object' && 'data' in body) {
+      return (body as { data: T }).data;
+    }
+    return body as T;
   }
 }
