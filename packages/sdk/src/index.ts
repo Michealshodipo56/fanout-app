@@ -41,7 +41,8 @@ export class FanoutClient {
 
   constructor(config: FanoutClientConfig = {}) {
     this.apiKey = config.apiKey;
-    this.baseUrl = config.baseUrl || 'https://api.fanout.network';
+    const boundApiUrl = typeof window === 'undefined' ? process.env.FANOUT_API_URL : undefined;
+    this.baseUrl = (config.baseUrl ?? boundApiUrl ?? '').replace(/\/$/, '');
   }
 
   public async getAgreement(agreementId: string): Promise<AgreementResponse> {

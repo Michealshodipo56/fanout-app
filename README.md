@@ -132,6 +132,18 @@ Pull requests must pass the same checks in GitHub Actions.
 
 Use [`.env.example`](.env.example) as the authoritative template. It covers the public API and Stellar network, server port, CORS origins, PostgreSQL URL, agreement allowlist, RPC URL, and network passphrase. Mainnet deployments must explicitly replace every Testnet value.
 
+### Vercel Services
+
+The root [`vercel.json`](vercel.json) deploys the Express API and Next.js web app as one Vercel project. Public `/api/*` traffic is routed to the `api` service and all other paths to `web`. Vercel also injects the API's internal URL into the web service as `FANOUT_API_URL`; do not create or override that environment variable in project settings.
+
+Run both services locally with Vercel CLI 47.0.5 or newer:
+
+```bash
+vercel dev -L
+```
+
+The background indexer is intentionally excluded because its continuous polling loop is not a request-driven Vercel Function. Deploy it on a worker-capable platform or redesign it around scheduled/queued execution.
+
 ## API Overview
 
 - `GET /health` — process health

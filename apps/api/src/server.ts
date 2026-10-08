@@ -106,6 +106,10 @@ app.get('/api/v1/analytics/summary', (_req: Request, res: Response) => {
   });
 });
 
-app.listen(PORT, () => {
-  console.log(`Fanout API Server running on port ${PORT}`);
-});
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`Fanout API Server running on port ${PORT}`);
+  });
+}
+
+export default app;
