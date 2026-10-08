@@ -68,10 +68,6 @@ pnpm test
 pnpm build
 ```
 
-## Documentation
-
-The documentation follows the same GitBook-style hierarchy used by FundKeep. Start with [`docs/SUMMARY.md`](docs/SUMMARY.md) for user guides, architecture, API notes, operations, security, and contribution guidance.
-
 ## Configuration
 
 Use [`.env.example`](.env.example) as the authoritative list. Browser-visible variables are prefixed with `NEXT_PUBLIC_` and must not contain secrets. Production deployments must set explicit network, contract, database, and CORS values.
