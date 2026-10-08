@@ -1,115 +1,37 @@
-import express, { Request, Response } from 'express';
+import express, { type NextFunction, type Request, type Response } from 'express';
 import cors from 'cors';
-import { db } from '@fanout/database';
+import { randomUUID } from 'node:crypto';
+import { db, type BeneficiaryRecord } from '@fanout/database';
 
 const app = express();
-const PORT = process.env.PORT || 4000;
+const PORT = Number(process.env.PORT || 4000);
+const origins = (process.env.CORS_ORIGINS || 'http://localhost:3000').split(',').map(value => value.trim());
 
-app.use(cors());
-app.use(express.json());
+app.disable('x-powered-by');
+app.use((_req, res, next) => { res.setHeader('X-Content-Type-Options','nosniff'); res.setHeader('Referrer-Policy','no-referrer'); next(); });
+app.use(cors({ origin: (origin, callback) => callback(null, !origin || origins.includes(origin)) }));
+app.use(express.json({ limit: '32kb' }));
 
-// Health Check
-app.get('/health', (_req: Request, res: Response) => {
-  res.json({ status: 'ok', service: 'Fanout REST API', network: 'testnet', timestamp: new Date() });
+app.get('/health', async (_req, res, next) => {
+  try { await db.health(); res.json({ status:'ok',service:'Fanout REST API',network:process.env.STELLAR_NETWORK || 'testnet',storage:db.mode,timestamp:new Date().toISOString() }); } catch(error){ next(error); }
 });
+app.get('/api/v1/agreements', async (_req,res,next)=>{try{res.json({success:true,data:await db.getAgreements()});}catch(error){next(error);}});
+app.get('/api/v1/agreements/:id', async (req,res,next)=>{try{const agreement=await db.getAgreementById(req.params.id);if(!agreement)return res.status(404).json({success:false,error:'Agreement not found'});res.json({success:true,data:agreement});}catch(error){next(error);}});
+app.post('/api/v1/agreements', async (req,res,next)=>{try{
+  const {contractAddress,name,creatorAddress,acceptedAsset,beneficiaries,requiredApprovals}=req.body;
+  if(!isAddress(contractAddress,'C')||!isAddress(creatorAddress,'G')||!isAddress(acceptedAsset,'C')||typeof name!=='string'||!name.trim()||!validBeneficiaries(beneficiaries)||!Number.isInteger(requiredApprovals)||requiredApprovals<1||requiredApprovals>beneficiaries.length)return res.status(400).json({success:false,error:'Invalid agreement parameters'});
+  const agreement=await db.createAgreement({id:`agr_${randomUUID()}`,contractAddress,name:name.trim(),creatorAddress,acceptedAsset,status:'Active',version:1,requiredApprovals,totalDistributed:'0',transactionCount:0,beneficiaries,createdAt:new Date()});
+  res.status(201).json({success:true,data:agreement});
+}catch(error){next(error);}});
+app.post('/api/v1/payments/requests',async(req,res,next)=>{try{const{agreementId,amount,payerAddress,reference}=req.body;const agreement=await db.getAgreementById(agreementId);if(!agreement)return res.status(404).json({success:false,error:'Agreement not found'});if(!/^\d+(\.\d{1,7})?$/.test(String(amount))||!isAddress(payerAddress,'G'))return res.status(400).json({success:false,error:'Invalid payment parameters'});const paymentRef=reference||`PAY_${Date.now()}`;res.json({success:true,data:{paymentRef,agreementId:agreement.id,amount,payerAddress,paymentUrl:`/pay/${agreement.id}?amount=${encodeURIComponent(amount)}&ref=${encodeURIComponent(paymentRef)}`}});}catch(error){next(error);}});
+app.get('/api/v1/payments/history',async(req,res,next)=>{try{const id=typeof req.query.agreementId==='string'?req.query.agreementId:undefined;res.json({success:true,data:id?await db.getPaymentsForAgreement(id):await db.getRecentPayments()});}catch(error){next(error);}});
+app.get('/api/v1/analytics/summary',async(_req,res,next)=>{try{const agreements=await db.getAgreements();res.json({success:true,data:{activeAgreements:agreements.filter(a=>a.status==='Active').length,totalDistributed:agreements.reduce((sum,a)=>sum+BigInt(a.totalDistributed),0n).toString(),totalTransactions:agreements.reduce((sum,a)=>sum+a.transactionCount,0),network:process.env.STELLAR_NETWORK||'testnet'}});}catch(error){next(error);}});
 
-// Agreements API
-app.get('/api/v1/agreements', (_req: Request, res: Response) => {
-  const agreements = db.getAgreements();
-  res.json({ success: true, data: agreements });
-});
+app.use((_req,res)=>res.status(404).json({success:false,error:'Not found'}));
+app.use((error:unknown,_req:Request,res:Response,_next:NextFunction)=>{console.error('[api]',error);res.status(500).json({success:false,error:'Internal server error'});});
 
-app.get('/api/v1/agreements/:id', (req: Request, res: Response) => {
-  const agr = db.getAgreementById(req.params.id);
-  if (!agr) {
-    return res.status(404).json({ success: false, error: 'Agreement not found' });
-  }
-  res.json({ success: true, data: agr });
-});
+function isAddress(value:unknown,prefix:'C'|'G'):value is string{return typeof value==='string'&&value.startsWith(prefix)&&value.length===56&&/^[A-Z2-7]+$/.test(value);}
+function validBeneficiaries(value:unknown):value is BeneficiaryRecord[]{if(!Array.isArray(value)||value.length===0||value.length>20)return false;const addresses=new Set<string>();let total=0;for(const item of value){if(!item||!isAddress(item.address,'G')||!Number.isInteger(item.allocationBps)||item.allocationBps<=0){return false;}addresses.add(item.address);total+=item.allocationBps;}return addresses.size===value.length&&total===10000;}
 
-app.post('/api/v1/agreements', (req: Request, res: Response) => {
-  const { contractAddress, name, creatorAddress, acceptedAsset, beneficiaries, requiredApprovals } = req.body;
-  
-  if (!contractAddress || !name || !creatorAddress || !acceptedAsset || !Array.isArray(beneficiaries) || beneficiaries.length === 0) {
-    return res.status(400).json({ success: false, error: 'Invalid parameters' });
-  }
-
-  const newAgr = db.createAgreement({
-    id: `agr_${Date.now()}`,
-    contractAddress,
-    name,
-    creatorAddress,
-    acceptedAsset,
-    status: 'Active',
-    version: 1,
-    requiredApprovals: requiredApprovals || beneficiaries.length,
-    totalDistributed: '0',
-    transactionCount: 0,
-    beneficiaries,
-    createdAt: new Date()
-  });
-
-  res.status(201).json({ success: true, data: newAgr });
-});
-
-// Payments API
-app.post('/api/v1/payments/requests', (req: Request, res: Response) => {
-  const { agreementId, amount, payerAddress, reference } = req.body;
-  const agr = db.getAgreementById(agreementId);
-  if (!agr) {
-    return res.status(404).json({ success: false, error: 'Agreement not found' });
-  }
-
-  const paymentRef = reference || `PAY_${Date.now()}`;
-  const paymentUrl = `/pay/${agr.id}?amount=${amount}&ref=${paymentRef}`;
-
-  res.json({
-    success: true,
-    data: {
-      paymentRef,
-      agreementId: agr.id,
-      amount,
-      payerAddress,
-      paymentUrl
-    }
-  });
-});
-
-app.get('/api/v1/payments/history', (req: Request, res: Response) => {
-  const { agreementId } = req.query;
-  if (typeof agreementId === 'string') {
-    const history = db.getPaymentsForAgreement(agreementId);
-    return res.json({ success: true, data: history });
-  }
-  res.json({ success: true, data: db.getRecentPayments() });
-});
-
-// Analytics Endpoint
-app.get('/api/v1/analytics/summary', (_req: Request, res: Response) => {
-  const agreements = db.getAgreements();
-  let totalDistributed = BigInt(0);
-  let totalTransactions = 0;
-
-  for (const a of agreements) {
-    totalDistributed += BigInt(a.totalDistributed);
-    totalTransactions += a.transactionCount;
-  }
-
-  res.json({
-    success: true,
-    data: {
-      activeAgreements: agreements.filter(a => a.status === 'Active').length,
-      totalDistributed: totalDistributed.toString(),
-      totalTransactions,
-      network: 'testnet'
-    }
-  });
-});
-
-if (require.main === module) {
-  app.listen(PORT, () => {
-    console.log(`Fanout API Server running on port ${PORT}`);
-  });
-}
-
+if(require.main===module)app.listen(PORT,()=>console.log(`Fanout API listening on ${PORT}`));
 export default app;
