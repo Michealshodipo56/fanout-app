@@ -1,0 +1,41 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "services": {
+    "api": {
+      "root": "apps/api",
+      "framework": "express",
+      "entrypoint": "src/server.ts",
+      "installCommand": "cd ../.. && pnpm install --frozen-lockfile",
+      "buildCommand": "cd ../.. && pnpm --filter @fanout/database build && pnpm --filter @fanout/stellar build && pnpm --filter @fanout/api build"
+    },
+    "web": {
+      "root": "apps/web",
+      "framework": "nextjs",
+      "installCommand": "cd ../.. && pnpm install --frozen-lockfile",
+      "buildCommand": "cd ../.. && pnpm --filter @fanout/database build && pnpm --filter @fanout/stellar build && pnpm --filter @fanout/ui build && pnpm --filter @fanout/sdk build && pnpm --filter @fanout/web build",
+      "outputDirectory": ".next",
+      "bindings": [
+        {
+          "type": "service",
+          "service": "api",
+          "format": "url",
+          "env": "FANOUT_API_URL"
+        }
+      ]
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": {
+        "service": "api"
+      }
+    },
+    {
+      "source": "/(.*)",
+      "destination": {
+        "service": "web"
+      }
+    }
+  ]
+}
