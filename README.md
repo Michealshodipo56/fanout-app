@@ -7,6 +7,8 @@
 
 `fanout-app` is the primary full-stack monorepo for **Fanout**, providing the web dashboard, REST API backend, developer SDK, PostgreSQL database schemas, and Soroban RPC event indexer daemon.
 
+> **Release status:** `v0.1.0` is a Stellar Testnet submission release. The contract-backed checkout submits real Soroban transactions, while the API persistence and indexer adapters remain development implementations. See the [production-readiness checklist](docs/operations/production-readiness.md) before any mainnet deployment.
+
 ---
 
 ## 🏗️ Monorepo Architecture
@@ -45,6 +47,9 @@ fanout-app/
 # Install all dependencies across monorepo workspace
 pnpm install
 
+# Create local configuration
+cp .env.example .env
+
 # Build all packages and applications
 pnpm build
 ```
@@ -55,6 +60,21 @@ pnpm build
 # Run web dashboard, API server, and event indexer concurrently
 pnpm dev
 ```
+
+### Verification
+
+```bash
+pnpm test
+pnpm build
+```
+
+## Documentation
+
+The documentation follows the same GitBook-style hierarchy used by FundKeep. Start with [`docs/SUMMARY.md`](docs/SUMMARY.md) for user guides, architecture, API notes, operations, security, and contribution guidance.
+
+## Configuration
+
+Use [`.env.example`](.env.example) as the authoritative list. Browser-visible variables are prefixed with `NEXT_PUBLIC_` and must not contain secrets. Production deployments must set explicit network, contract, database, and CORS values.
 
 ---
 
