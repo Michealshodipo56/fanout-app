@@ -3,14 +3,14 @@
 ![Next.js](https://img.shields.io/badge/Next.js-14-black)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.6-blue)
 ![Stellar](https://img.shields.io/badge/Stellar-Testnet-purple)
-![CI](https://github.com/Michealshodipo56/fanout-app/actions/workflows/ci.yml/badge.svg)
+![CI](https://github.com/fanout-web/fanout-app/actions/workflows/ci.yml/badge.svg)
 ![License](https://img.shields.io/badge/License-MIT-green)
 
 > One payment. Everyone gets their share.
 
 Fanout is a non-custodial revenue-sharing platform for teams, creators, open-source projects, and internet businesses on Stellar. A team defines beneficiary wallets and percentage allocations once; each payment is then split atomically by a Soroban agreement contract.
 
-This repository contains the web application, REST API, TypeScript SDK, shared design system, database package, Stellar client, and event-indexing service. The on-chain agreement lives in [`fanout-contracts`](https://github.com/Michealshodipo56/fanout-contracts).
+This repository contains the web application, REST API, TypeScript SDK, shared design system, database package, Stellar client, and event-indexing service. The on-chain agreement lives in [`fanout-contracts`](https://github.com/fanout-web/fanout-contracts).
 
 > **Release status:** `v0.1.0` is a Stellar Testnet submission release. Checkout transactions are real and RPC-confirmed. API persistence and event ingestion remain development adapters and must be replaced before mainnet use.
 
@@ -103,7 +103,7 @@ fanout-app/
 ### Install and configure
 
 ```bash
-git clone https://github.com/Michealshodipo56/fanout-app.git
+git clone https://github.com/fanout-web/fanout-app.git
 cd fanout-app
 pnpm install --frozen-lockfile
 cp .env.example .env
@@ -173,7 +173,7 @@ Before mainnet, replace the development database and event adapters, validate co
 
 ## Releases
 
-Releases use semantic version tags and must identify compatible contract versions, network assumptions, migrations, and verification results. See the [latest release](https://github.com/Michealshodipo56/fanout-app/releases/latest).
+Releases use semantic version tags and must identify compatible contract versions, network assumptions, migrations, and verification results. See the [latest release](https://github.com/fanout-web/fanout-app/releases/latest).
 
 ## Contributing
 
