@@ -1,0 +1,30 @@
+services:
+  - type: web
+    name: fanout-api
+    runtime: node
+    plan: starter
+    buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm --filter @fanout/database build && pnpm --filter @fanout/api build
+    startCommand: pnpm --filter @fanout/api start
+    healthCheckPath: /health
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: CORS_ORIGINS
+        value: https://fanout-labs.vercel.app
+      - key: STELLAR_NETWORK
+        value: testnet
+  - type: worker
+    name: fanout-indexer
+    runtime: node
+    plan: starter
+    buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm --filter @fanout/database build && pnpm --filter @fanout/stellar build && pnpm --filter @fanout/indexer build
+    startCommand: pnpm --filter @fanout/indexer start
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: FANOUT_CONTRACT_IDS
+        sync: false
+      - key: STELLAR_RPC_URL
+        value: https://soroban-testnet.stellar.org
+      - key: INDEXER_POLL_MS
+        value: 5000

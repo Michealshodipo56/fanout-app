@@ -1,5 +1,7 @@
 # Fanout Application Monorepo
 
+<p align="center"><img src="apps/web/public/fanout-logo.png" alt="Fanout logo" width="112" /></p>
+
 ![Next.js](https://img.shields.io/badge/Next.js-14-black)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.6-blue)
 ![Stellar](https://img.shields.io/badge/Stellar-Testnet-purple)
@@ -13,6 +15,20 @@ Fanout is a non-custodial revenue-sharing platform for teams, creators, open-sou
 This repository contains the web application, REST API, TypeScript SDK, shared design system, database package, Stellar client, and event-indexing service. The on-chain agreement lives in [`fanout-contracts`](https://github.com/fanout-web/fanout-contracts).
 
 > **Release status:** `v0.1.0` is a Stellar Testnet submission release. Checkout transactions are real and RPC-confirmed. API persistence and event ingestion remain development adapters and must be replaced before mainnet use.
+
+## Live Testnet
+
+- Application: [fanout-labs.vercel.app](https://fanout-labs.vercel.app)
+- Contract: [`CCAK6Y...STPRV`](https://stellar.expert/explorer/testnet/contract/CCAK6YBIECDQ2GFPMYLV3GWQPJN2DVGJGDHKY76ESZHI56DZMELSTPRV)
+- Verified payment: [`77e0a9...ada04c`](https://stellar.expert/explorer/testnet/tx/77e0a9b12362f48a2bdddaec9865aea82b36ab2116b777c892bf8beca3ada04c)
+
+## Maintainer and Community
+
+| Maintainer | Role | Contact |
+| --- | --- | --- |
+| [Micheal Shodipo](https://github.com/michealshodipo56) | Project maintainer | [GitHub](https://github.com/michealshodipo56) |
+
+Use [GitHub Discussions](https://github.com/fanout-web/fanout-app/discussions) for product and contributor questions. Report security issues privately using [SECURITY.md](SECURITY.md).
 
 ## Why Fanout?
 
@@ -183,6 +199,8 @@ const request = await fanout.createPaymentRequest({
 
 Before mainnet, replace the development database and event adapters, validate configuration at startup, add migrations and backup procedures, restrict CORS, add rate limits and telemetry, rehearse rollback, and complete an independent contract audit. Open issues track this work transparently.
 
+The repository includes a Neon-compatible PostgreSQL adapter, automatic idempotent schema setup, a real Soroban RPC event indexer, and a [`render.yaml`](render.yaml) blueprint for the API and worker. Production services require operator-supplied `DATABASE_URL` and `FANOUT_CONTRACT_IDS` secrets.
+
 ## Releases
 
 Releases use semantic version tags and must identify compatible contract versions, network assumptions, migrations, and verification results. See the [latest release](https://github.com/fanout-web/fanout-app/releases/latest).
@@ -190,6 +208,10 @@ Releases use semantic version tags and must identify compatible contract version
 ## Contributing
 
 Read [CONTRIBUTING.md](CONTRIBUTING.md), select an open issue, and use a focused `feat/`, `fix/`, `docs/`, or `test/` branch. Use Conventional Commits and include tests for behavioral changes.
+
+## Contributors
+
+<a href="https://github.com/fanout-web/fanout-app/graphs/contributors"><img src="https://contrib.rocks/image?repo=fanout-web/fanout-app" alt="Fanout contributors" /></a>
 
 ## License
 

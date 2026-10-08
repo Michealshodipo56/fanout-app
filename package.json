@@ -9,7 +9,8 @@
     "lint": "pnpm build"
   },
   "devDependencies": {
-    "typescript": "^5.6.3",
-    "prettier": "^3.3.3"
+    "@neon/config": "^1.8.5",
+    "prettier": "^3.3.3",
+    "typescript": "^5.6.3"
   }
 }
