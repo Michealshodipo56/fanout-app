@@ -12,9 +12,11 @@ app.use((_req, res, next) => { res.setHeader('X-Content-Type-Options','nosniff')
 app.use(cors({ origin: (origin, callback) => callback(null, !origin || origins.includes(origin)) }));
 app.use(express.json({ limit: '32kb' }));
 
-app.get('/health', async (_req, res, next) => {
+const healthHandler = async (_req: Request, res: Response, next: NextFunction) => {
   try { await db.health(); res.json({ status:'ok',service:'Fanout REST API',network:process.env.STELLAR_NETWORK || 'testnet',storage:db.mode,timestamp:new Date().toISOString() }); } catch(error){ next(error); }
-});
+};
+app.get('/health', healthHandler);
+app.get('/api/health', healthHandler);
 app.get('/api/v1/agreements', async (_req,res,next)=>{try{res.json({success:true,data:await db.getAgreements()});}catch(error){next(error);}});
 app.get('/api/v1/agreements/:id', async (req,res,next)=>{try{const agreement=await db.getAgreementById(req.params.id);if(!agreement)return res.status(404).json({success:false,error:'Agreement not found'});res.json({success:true,data:agreement});}catch(error){next(error);}});
 app.post('/api/v1/agreements', async (req,res,next)=>{try{

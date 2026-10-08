@@ -4,9 +4,9 @@
     "api": {
       "root": "apps/api",
       "framework": "express",
-      "entrypoint": "src/server.ts",
+      "entrypoint": "server.js",
       "installCommand": "cd ../.. && pnpm install --frozen-lockfile",
-      "buildCommand": "cd ../.. && pnpm --filter @fanout/database build && pnpm --filter @fanout/stellar build && pnpm --filter @fanout/api build"
+      "buildCommand": "cd ../.. && pnpm exec esbuild apps/api/src/server.ts --bundle --platform=node --format=cjs --alias:@fanout/database=./packages/database/src/index.ts --outfile=apps/api/server.js"
     },
     "web": {
       "root": "apps/web",
