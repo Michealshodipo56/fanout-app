@@ -5,7 +5,7 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc",
-    "test": "echo \"SDK package ok\""
+    "test": "node --test dist/*.test.js"
   },
   "dependencies": {
     "@fanout/stellar": "workspace:*"

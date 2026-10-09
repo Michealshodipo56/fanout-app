@@ -5,7 +5,7 @@
   "scripts": {
     "build": "pnpm --filter \"./packages/*\" build && pnpm --filter \"./apps/*\" build && pnpm --filter \"./services/*\" build",
     "dev": "pnpm --parallel dev",
-    "test": "pnpm build && node --test packages/*/dist/*.test.js",
+    "test": "pnpm build && node --test packages/*/dist/*.test.js apps/*/dist/*.test.js services/*/dist/*.test.js",
     "lint": "pnpm build"
   },
   "devDependencies": {

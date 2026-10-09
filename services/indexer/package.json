@@ -7,7 +7,7 @@
     "build": "tsc",
     "dev": "ts-node src/indexer.ts",
     "start": "node dist/indexer.js",
-    "test": "echo \"Indexer service ok\""
+    "test": "node --test dist/*.test.js"
   },
   "dependencies": {
     "@fanout/database": "workspace:*",
