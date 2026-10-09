@@ -7,7 +7,7 @@
     "build": "tsc",
     "dev": "ts-node src/server.ts",
     "start": "node dist/server.js",
-    "test": "echo \"API app ok\""
+    "test": "node --test dist/*.test.js"
   },
   "dependencies": {
     "@fanout/database": "workspace:*",

@@ -19,6 +19,7 @@ This repository contains the web application, REST API, TypeScript SDK, shared d
 ## Live Testnet
 
 - Application: [fanout-labs.vercel.app](https://fanout-labs.vercel.app)
+- API health: [fanout-labs.vercel.app/api/health](https://fanout-labs.vercel.app/api/health)
 - Documentation: [fanout-web.github.io/fanout-docs](https://fanout-web.github.io/fanout-docs/)
 - Contract: [`CCAK6Y...STPRV`](https://stellar.expert/explorer/testnet/contract/CCAK6YBIECDQ2GFPMYLV3GWQPJN2DVGJGDHKY76ESZHI56DZMELSTPRV)
 - Verified payment: [`77e0a9...ada04c`](https://stellar.expert/explorer/testnet/tx/77e0a9b12362f48a2bdddaec9865aea82b36ab2116b777c892bf8beca3ada04c)
@@ -200,7 +201,7 @@ const request = await fanout.createPaymentRequest({
 
 Before mainnet, validate configuration at startup, automate migration promotion and backup restore drills, add rate limits and telemetry, rehearse rollback, and complete an independent contract audit. Open issues track this work transparently.
 
-The repository includes a Neon-compatible PostgreSQL adapter, automatic idempotent schema setup, a real Soroban RPC event indexer, and a [`render.yaml`](render.yaml) blueprint for the API and worker. Production services require operator-supplied `DATABASE_URL` and `FANOUT_CONTRACT_IDS` secrets.
+The repository includes a Neon-compatible PostgreSQL adapter, automatic idempotent schema setup, a real Soroban RPC event indexer, and a [`render.yaml`](render.yaml) blueprint for the API and worker. The public Vercel deployment serves the web app and REST API together. Render is required only for the continuously running indexer worker; its public Testnet contract allowlist is committed, while `DATABASE_URL` remains an operator-supplied secret.
 
 ## Releases
 

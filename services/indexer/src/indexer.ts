@@ -34,7 +34,7 @@ export class SorobanEventIndexer {
   }
 }
 
-function splitAmount(amount:bigint,beneficiaries:{address:string;allocationBps:number}[]){
+export function splitAmount(amount:bigint,beneficiaries:{address:string;allocationBps:number}[]){
   const payouts=beneficiaries.map((b,index)=>({beneficiaryAddress:b.address,allocationBps:b.allocationBps,amount:amount*BigInt(b.allocationBps)/10000n,remainder:amount*BigInt(b.allocationBps)%10000n,index}));
   let leftover=amount-payouts.reduce((sum,p)=>sum+p.amount,0n);for(const payout of [...payouts].sort((a,b)=>a.remainder===b.remainder?a.index-b.index:a.remainder>b.remainder?-1:1)){if(leftover===0n)break;payout.amount+=1n;leftover-=1n;}
   return payouts.map(({beneficiaryAddress,allocationBps,amount})=>({beneficiaryAddress,allocationBps,amount:amount.toString()}));

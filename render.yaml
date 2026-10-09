@@ -23,8 +23,12 @@ services:
       - key: DATABASE_URL
         sync: false
       - key: FANOUT_CONTRACT_IDS
-        sync: false
+        value: CCAK6YBIECDQ2GFPMYLV3GWQPJN2DVGJGDHKY76ESZHI56DZMELSTPRV
       - key: STELLAR_RPC_URL
         value: https://soroban-testnet.stellar.org
+      - key: STELLAR_NETWORK_PASSPHRASE
+        value: Test SDF Network ; September 2015
+      - key: STELLAR_NETWORK
+        value: testnet
       - key: INDEXER_POLL_MS
         value: 5000
